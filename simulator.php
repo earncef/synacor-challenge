@@ -1,7 +1,7 @@
 <?php
 
 class Simulator {
-    
+
     protected $memory = [];
     protected $r0 = null;
     protected $r1 = null;
@@ -12,11 +12,12 @@ class Simulator {
     protected $r6 = null;
     protected $r7 = null;
     protected $stack = [];
-    
+
     protected $filename;
     protected $position = -1;
     protected $memSize = 0;
-    
+    protected $input = "";
+
     public function __construct($filename) {
         $this->filename = $filename;
     }
@@ -27,7 +28,7 @@ class Simulator {
             $this->nextOp();
         }
     }
-    
+
     protected function nextOp() {
         $op = $this->getNextMemoryValue();
 
@@ -69,12 +70,12 @@ class Simulator {
             $a = $this->getNextMemoryValue(true);
             $b = $this->getNextMemoryValue();
             $c = $this->getNextMemoryValue();
-            $this->{"r$a"} = ($b + $c) % 32768;            
+            $this->{"r$a"} = ($b + $c) % 32768;
         } elseif ($op == 10) {
             $a = $this->getNextMemoryValue(true);
             $b = $this->getNextMemoryValue();
             $c = $this->getNextMemoryValue();
-            $this->{"r$a"} = ($b * $c) % 32768;            
+            $this->{"r$a"} = ($b * $c) % 32768;
         } elseif ($op == 11) {
             $a = $this->getNextMemoryValue(true);
             $b = $this->getNextMemoryValue();
@@ -115,14 +116,18 @@ class Simulator {
             echo chr($a);
         } elseif ($op == 20) {
             $a = $this->getNextMemoryValue(true);
-            $this->{"r$a"} = ord(fgets(STDIN));
+            if ($this->input == '') {
+                $this->input = fgets(STDIN);
+            }
+            $this->{"r$a"} = ord($this->input[0]);
+            $this->input = substr($this->input, 1);
         } elseif ($op == 21) {
         } else {
             echo "Oops!!! Something has gone wrong. You are not supposed to be here";
             exit;
         }
     }
-    
+
     protected function getNextMemoryValue($register = false) {
         $value = $this->memory[++$this->position];
         if ($value < 32768) {
@@ -138,14 +143,14 @@ class Simulator {
         $handle = fopen($this->filename, "rb");
         $memory = unpack('v*', fread($handle, filesize($this->filename)));
         fclose($handle);
-        
+
         $i = 0;
         foreach($memory as $value) {
             $this->memory[$i++] = $value;
-        }        
+        }
         $this->memSize = count($this->memory);
     }
-    
+
 }
 
 $simulator = new Simulator('challenge.bin');
