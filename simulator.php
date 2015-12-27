@@ -123,8 +123,7 @@ class Simulator {
             $this->input = substr($this->input, 1);
         } elseif ($op == 21) {
         } else {
-            echo "Oops!!! Something has gone wrong. You are not supposed to be here";
-            exit;
+            throw new Exception('Oops!!! Something has gone wrong. You are not supposed to be here');
         }
     }
 
