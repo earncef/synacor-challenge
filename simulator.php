@@ -13,11 +13,36 @@ class Simulator {
     protected $r7 = null;
     protected $stack = [];
     protected $ops = ['halt', 'set', 'push', 'pop', 'eq', 'gt', 'jmp', 'lt', 'jf', 'add', 'mult', 'mod', 'and', 'or', 'not', 'rmem', 'wmem', 'call', 'ret', 'out', 'in', 'noop'];
+    protected $opParams = [
+        'halt' => 0, 
+        'set'  => 2, 
+        'push' => 1, 
+        'pop'  => 1, 
+        'eq'   => 3, 
+        'gt'   => 3, 
+        'jmp'  => 1, 
+        'lt'   => 2, 
+        'jf'   => 2, 
+        'add'  => 3, 
+        'mult' => 3, 
+        'mod'  => 3, 
+        'and'  => 3,
+        'or'   => 3, 
+        'not'  => 2, 
+        'rmem' => 2, 
+        'wmem' => 2, 
+        'call' => 1, 
+        'ret'  => 0, 
+        'out'  => 1, 
+        'in'   => 1, 
+        'noop' => 0,
+    ];
 
     protected $filename;
     protected $position = -1;
     protected $memSize = 0;
     protected $input = "";
+    protected $log = false;
 
     public function __construct($filename) {
         $this->filename = $filename;
@@ -31,11 +56,30 @@ class Simulator {
     }
 
     protected function nextOp() {
+        if ($this->log) {
+            return $this->log($op);
+        }
+
         $op = $this->getMemoryValues(1);
         if (isset($this->ops[$op])) {
             return $this->{"_{$this->ops[$op]}"}();
         }
         throw new Exception('Oops!!! Something went wrong. You are not supposed to be here!');
+    }
+    
+    protected function log() {
+        $op = $this->memory[++$this->position];
+        echo $this->position, ': ';
+        if (!isset($this->ops[$op])) {
+            echo $op, "\n";
+            return;
+        }
+        
+        echo $this->ops[$op], ' ';
+        for ($i = 0; $i < $this->opParams[$this->ops[$op]]; $i++) {
+            echo $this->memory[++$this->position], ' ';
+        }
+        echo "\n";
     }
     
     protected function _halt() {
