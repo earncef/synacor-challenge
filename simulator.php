@@ -50,7 +50,7 @@ class Simulator {
 
     public function run() {
         $this->loadProgramToMemory();
-        while ($this->position < $this->memSize) {
+        while ($this->position < $this->memSize - 1) {
             $this->nextOp();
         }
     }
