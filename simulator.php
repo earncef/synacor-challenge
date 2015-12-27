@@ -12,6 +12,7 @@ class Simulator {
     protected $r6 = null;
     protected $r7 = null;
     protected $stack = [];
+    protected $ops = ['halt', 'set', 'push', 'pop', 'eq', 'gt', 'jmp', 'lt', 'jf', 'add', 'mult', 'mod', 'and', 'or', 'not', 'rmem', 'wmem', 'call', 'ret', 'out', 'in', 'noop'];
 
     protected $filename;
     protected $position = -1;
@@ -31,83 +32,127 @@ class Simulator {
 
     protected function nextOp() {
         $op = $this->getMemoryValues(1);
-
-        if ($op == 0) {
-            exit;
-        } elseif ($op == 1) {
-            list($a, $b) = $this->getMemoryValues(2, true);
-            $this->setRegister($a, $b);
-        } elseif ($op == 2) {
-            $a = $this->getMemoryValues(1);
-            array_push($this->stack, $a);
-        } elseif ($op == 3) {
-            $a = $this->getMemoryValues(1, true);
-            if (empty($this->stack)) throw new Exception('Empty stack');
-            $this->setRegister($a, array_pop($this->stack));
-        } elseif ($op == 4) {
-            list($a, $b, $c) = $this->getMemoryValues(3, true);
-            $this->setRegister($a, ($b == $c) ? 1: 0);
-        } elseif ($op == 5) {
-            list($a, $b, $c) = $this->getMemoryValues(3, true);
-            $this->setRegister($a, ($b > $c) ? 1: 0);
-        } elseif ($op == 6) {
-            $a = $this->getMemoryValues(1);
-            $this->position = $a - 1;
-        } elseif ($op == 7) {
-            list($a, $b) = $this->getMemoryValues(2);
-            if ($a != 0) $this->position = $b - 1;
-        } elseif ($op == 8) {
-            list($a, $b) = $this->getMemoryValues(2);
-            if ($a == 0) $this->position = $b - 1;
-        } elseif ($op == 9) {
-            list($a, $b, $c) = $this->getMemoryValues(3, true);
-            $this->setRegister($a, ($b + $c) % 32768);
-        } elseif ($op == 10) {
-            list($a, $b, $c) = $this->getMemoryValues(3, true);
-            $this->setRegister($a, ($b * $c) % 32768);
-        } elseif ($op == 11) {
-            list($a, $b, $c) = $this->getMemoryValues(3, true);
-            $this->setRegister($a, $b % $c);
-        } elseif ($op == 12) {
-            list($a, $b, $c) = $this->getMemoryValues(3, true);
-            $this->setRegister($a, $b & $c);
-        } elseif ($op == 13) {
-            list($a, $b, $c) = $this->getMemoryValues(3, true);
-            $this->setRegister($a, $b | $c);
-        } elseif ($op == 14) {
-            list($a, $b) = $this->getMemoryValues(2, true);
-            $this->setRegister($a, 32767 & ~ $b);
-        } elseif ($op == 15) {
-            list($a, $b) = $this->getMemoryValues(2, true);
-            $this->setRegister($a, $this->memory[$b]);
-        } elseif ($op == 16) {
-            list($a, $b) = $this->getMemoryValues(2);
-            $this->memory[$a] = $b;
-        } elseif ($op == 17) {
-            $a = $this->getMemoryValues(1);
-            array_push($this->stack, $this->position + 1);
-            $this->position = $a - 1;
-        } elseif ($op == 18) {
-            if (empty($this->stack)) exit;
-            $a = array_pop($this->stack);
-            $this->position = $a - 1;
-        } elseif ($op == 19) {
-            $a = $this->getMemoryValues(1);
-            echo chr($a);
-        } elseif ($op == 20) {
-            $a = $this->getMemoryValues(1, true);
-            if ($this->input == '') {
-                $this->input = fgets(STDIN);
-            }
-            $this->setRegister($a, ord($this->input[0]));
-            $this->input = substr($this->input, 1);
-        } elseif ($op == 21) {
-            //noop
-        } else {
-            throw new Exception('Oops!!! Something has gone wrong. You are not supposed to be here');
+        if (isset($this->ops[$op])) {
+            return $this->{"_{$this->ops[$op]}"}();
         }
+        throw new Exception('Oops!!! Something has gone wrong. You are not supposed to be here');
     }
     
+    protected function _halt() {
+        exit;
+    }
+    
+    protected function _set() {
+        list($a, $b) = $this->getMemoryValues(2, true);
+        $this->setRegister($a, $b);
+    } 
+    
+    protected function _push() {
+        $a = $this->getMemoryValues(1);
+        array_push($this->stack, $a);
+    }
+    
+    protected function _pop() {
+        $a = $this->getMemoryValues(1, true);
+        if (empty($this->stack)) throw new Exception('Empty stack');
+        $this->setRegister($a, array_pop($this->stack));
+    }
+    
+    protected function _eq() {
+        list($a, $b, $c) = $this->getMemoryValues(3, true);
+        $this->setRegister($a, ($b == $c) ? 1: 0);
+    }
+    
+    protected function _gt() {
+        list($a, $b, $c) = $this->getMemoryValues(3, true);
+        $this->setRegister($a, ($b > $c) ? 1: 0);
+    }
+    
+    protected function _jmp() {
+        $a = $this->getMemoryValues(1);
+        $this->position = $a - 1;
+    }
+    
+    protected function _lt() {
+        list($a, $b) = $this->getMemoryValues(2);
+        if ($a != 0) $this->position = $b - 1;
+    }
+    
+    protected function _jf() {
+        list($a, $b) = $this->getMemoryValues(2);
+        if ($a == 0) $this->position = $b - 1;
+    }
+    
+    protected function _add() {
+        list($a, $b, $c) = $this->getMemoryValues(3, true);
+        $this->setRegister($a, ($b + $c) % 32768);
+    }
+    
+    protected function _mult() {
+        list($a, $b, $c) = $this->getMemoryValues(3, true);
+        $this->setRegister($a, ($b * $c) % 32768);
+    }
+    
+    protected function _mod() {
+        list($a, $b, $c) = $this->getMemoryValues(3, true);
+        $this->setRegister($a, $b % $c);
+    }
+    
+    protected function _and() {
+        list($a, $b, $c) = $this->getMemoryValues(3, true);
+        $this->setRegister($a, $b & $c);
+    }
+    
+    protected function _or() {
+        list($a, $b, $c) = $this->getMemoryValues(3, true);
+        $this->setRegister($a, $b | $c);
+    }
+
+    protected function _not() {
+        list($a, $b) = $this->getMemoryValues(2, true);
+        $this->setRegister($a, 32767 & ~ $b);
+    }
+    
+    protected function _rmem() {
+        list($a, $b) = $this->getMemoryValues(2, true);
+        $this->setRegister($a, $this->memory[$b]);
+    }
+    
+    protected function _wmem() {
+        list($a, $b) = $this->getMemoryValues(2);
+        $this->memory[$a] = $b;        
+    }
+    
+    protected function _call() {
+        $a = $this->getMemoryValues(1);
+        array_push($this->stack, $this->position + 1);
+        $this->position = $a - 1;
+    }
+    
+    protected function _ret() {
+        if (empty($this->stack)) exit;
+        $a = array_pop($this->stack);
+        $this->position = $a - 1;
+    }
+    
+    protected function _out() {
+        $a = $this->getMemoryValues(1);
+        echo chr($a);
+    }
+    
+    protected function _in() {
+        $a = $this->getMemoryValues(1, true);
+        if ($this->input == '') {
+            $this->input = fgets(STDIN);
+        }
+        $this->setRegister($a, ord($this->input[0]));
+        $this->input = substr($this->input, 1);
+    }
+    
+    protected function _noop() {
+        // noop    
+    } 
+       
     protected function setRegister($r, $value) {
         $this->{"r$r"} = $value;
     }
