@@ -35,7 +35,7 @@ class Simulator {
         if (isset($this->ops[$op])) {
             return $this->{"_{$this->ops[$op]}"}();
         }
-        throw new Exception('Oops!!! Something has gone wrong. You are not supposed to be here');
+        throw new Exception('Oops!!! Something went wrong. You are not supposed to be here!');
     }
     
     protected function _halt() {
