@@ -42,5 +42,16 @@ take shiny coin
 down
 east
 
-# Solve the puzzle here. coinsolver.php
+# Solve the puzzle here. coinsolver.php: 9 + 2 * 5^2 + 7^3 - 3 = 399
 
+use blue coin
+use red coin
+use shiny coin
+use concave coin
+use corroded coin
+
+north
+take teleporter
+use teleporter
+take business card
+take strange book
