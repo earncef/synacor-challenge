@@ -157,6 +157,22 @@ class Simulator {
         $this->{"r$r"} = $value;
     }
     
+    /**
+     * Get either register addresses or data of length $count from memory
+     * starting from the next memory position.
+     * If register address is expected set $register to true for every
+     * expected value. Otherwise, the value from the register is returned.
+     * 
+     * Example:
+     * $this->getMemoryValue(2, true) will check the first value for 
+     * valid register address.
+     * $this->getMemoryValue(3, true, false, true) will check the first 
+     * and third values for valid register address.
+     * 
+     * @param int $count
+     * @param bool ...$register
+     * @return array
+     */
     protected function getMemoryValues($count) {
         $args = func_get_args();
         array_shift($args);
