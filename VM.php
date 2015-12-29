@@ -1,6 +1,6 @@
-<?php
+<?php 
 
-class Simulator {
+class VM {
 
     protected $memory = [];
     protected $r0 = null;
@@ -42,7 +42,6 @@ class Simulator {
     protected $position = -1;
     protected $memSize = 0;
     protected $input = "";
-    protected $log = false;
 
     public function __construct($filename) {
         $this->filename = $filename;
@@ -50,16 +49,13 @@ class Simulator {
 
     public function run() {
         $this->loadProgramToMemory();
+
         while ($this->position < $this->memSize - 1) {
             $this->nextOp();
         }
     }
 
     protected function nextOp() {
-        if ($this->log) {
-            return $this->log($op);
-        }
-
         $op = $this->getMemoryValues(1);
         if (isset($this->ops[$op])) {
             return $this->{"_{$this->ops[$op]}"}();
@@ -67,21 +63,31 @@ class Simulator {
         throw new Exception('Oops!!! Something went wrong. You are not supposed to be here!');
     }
     
-    protected function log() {
-        $op = $this->memory[++$this->position];
-        echo $this->position, ': ';
-        if (!isset($this->ops[$op])) {
-            echo $op, "\n";
-            return;
+    protected function logMemory($ops = true, $data = false) {
+        $opDump = $dataDump = '';
+        for ($position = -1; $position < $this->memSize - 1;) {
+            $op = $this->memory[++$position];
+            $opDump .= $position . ': ';
+            $dataDump .= chr($op);
+            if (!isset($this->ops[$op])) {
+                $opDump .= $op . "\n";
+                continue;
+            }
+            
+            $opDump .= $this->ops[$op] . ' ';
+            for ($i = 0; $i < $this->opParams[$this->ops[$op]]; $i++) {
+                $opDump .= $this->memory[++$position] . ' ';
+            }
+            $opDump .= "\n";
         }
-        
-        echo $this->ops[$op], ' ';
-        for ($i = 0; $i < $this->opParams[$this->ops[$op]]; $i++) {
-            echo $this->memory[++$this->position], ' ';
+        if ($ops) {
+            file_put_contents('opdump.txt', $opDump);
         }
-        echo "\n";
+        if ($data) {
+            file_put_contents('datadump.txt', $dataDump);
+        }
     }
-    
+        
     protected function _halt() {
         exit;
     }
@@ -188,6 +194,10 @@ class Simulator {
         $a = $this->getMemoryValues(1, true);
         if ($this->input == '') {
             $this->input = fgets(STDIN);
+            if ($this->input == "log-data\n") {
+                $this->input = "\n";
+                $this->logMemory(false, true);
+            }
         }
         $this->setRegister($a, ord($this->input[0]));
         $this->input = substr($this->input, 1);
@@ -254,6 +264,3 @@ class Simulator {
    }
 
 }
-
-$simulator = new Simulator('challenge.bin');
-$simulator->run();
